@@ -7,17 +7,23 @@
 </head>
 <body>
     <h2>Добавить монету или значок</h2>
+
     <input type="text" id="name" placeholder="Название"><br>
     <textarea id="description" placeholder="Описание"></textarea><br>
     <input type="file" id="image"><br>
     <img id="preview" alt="Превью" style="max-width: 150px; margin-top: 10px;"><br>
-    <button onclick="addItem()">Сохранить</button>
+    <button id="addItemBtn">Сохранить</button>
     <p id="addStatus"></p>
 
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script> 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script> 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script> 
+
+    <!-- Настройки Firebase -->
     <script src="firebase.js"></script>
+    <!-- Основной скрипт -->
     <script src="script.js"></script>
 </body>
 </html>

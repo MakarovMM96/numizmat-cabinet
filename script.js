@@ -66,7 +66,12 @@ window.onload = () => {
 
         // На странице add_item слушаем кнопку
         if (path.endsWith("add_item.html") && user) {
-            document.getElementById("addItemBtn")?.addEventListener("click", () => addItem(db, user));
+            const addButton = document.getElementById("addItemBtn");
+            if (addButton) {
+                addButton.onclick = () => addItem(db, user);
+            } else {
+                console.warn("Кнопка 'addItemBtn' не найдена");
+            }
         }
     });
 };
