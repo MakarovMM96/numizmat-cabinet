@@ -1,12 +1,41 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Личный кабинет нумизмата</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <h1>Добро пожаловать в личный кабинет нумизмата</h1>
-    <p><a href="dashboard.html">Посмотреть мою коллекцию</a></p>
-</body>
-</html>
+<h1>Добро пожаловать в личный кабинет нумизмата</h1>
+<p><a href="dashboard.html">Посмотреть мою коллекцию</a></p>
+
+<h2>Регистрация</h2>
+<input type="email" id="email" placeholder="Email"><br>
+<input type="password" id="password" placeholder="Пароль"><br>
+<button onclick="register()">Зарегистрироваться</button>
+<p id="status"></p>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script> 
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script> 
+
+<script>
+// Вставь сюда свои настройки из Firebase Console → Project settings
+const firebaseConfig = {
+    apiKey: "AIzaSyCW7Ps5_vs2NOwgHCAjNmU5V10Cd3p8fAI",
+    authDomain: "numizmat-cabinet.firebaseapp.com",
+    projectId: "numizmat-cabinet",
+    storageBucket: "numizmat-cabinet.appspot.com",
+    messagingSenderId: "numizmat-cabinet",
+    appId: "numizmat-cabinet"
+};
+
+// Инициализация Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Регистрация
+function register() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+            document.getElementById("status").innerText = "✅ Регистрация успешна!";
+        })
+        .catch((error) => {
+            document.getElementById("status").innerText = "❌ Ошибка: " + error.message;
+        });
+}
+</script>
