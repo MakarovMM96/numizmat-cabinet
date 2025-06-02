@@ -1,7 +1,7 @@
 // Локальное хранилище коллекции
-const STORAGE_KEY = 'numizmat_collection';
+const USER_COLLECTION_PREFIX = 'user_collection_';
 
-// Регистрация пользователя (упрощенная версия для локального хранения)
+// Регистрация пользователя
 function register() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
@@ -11,8 +11,20 @@ function register() {
         return;
     }
 
-    localStorage.setItem('currentUser', JSON.stringify({ email }));
+    // Генерируем уникальный ID пользователя
+    const userId = generateUserId(email);
+    localStorage.setItem('currentUser', JSON.stringify({ 
+        email, 
+        userId 
+    }));
     document.getElementById("status").innerText = "✅ Успешно зарегистрирован!";
+}
+
+// Генерация ID пользователя
+function generateUserId(email) {
+    return 'user_' + Math.abs(email.split('').reduce((hash, char) => {
+        return (hash << 5) - hash + char.charCodeAt(0);
+    }, 0));
 }
 
 // Вход пользователя
@@ -25,7 +37,11 @@ function login() {
         return;
     }
 
-    localStorage.setItem('currentUser', JSON.stringify({ email }));
+    const userId = generateUserId(email);
+    localStorage.setItem('currentUser', JSON.stringify({ 
+        email, 
+        userId 
+    }));
     document.getElementById("loginStatus").innerText = "✅ Вход выполнен!";
     setTimeout(() => window.location.href = "dashboard.html", 500);
 }
@@ -53,12 +69,15 @@ function checkAuth() {
 function loadCollection() {
     if (!checkAuth()) return;
 
+    const user = JSON.parse(localStorage.getItem('currentUser'));
     const collectionContainer = document.getElementById("collection");
     if (!collectionContainer) return;
 
     collectionContainer.innerHTML = "<p>Загрузка коллекции...</p>";
 
-    const collection = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    // Получаем коллекцию только для текущего пользователя
+    const userCollectionKey = USER_COLLECTION_PREFIX + user.userId;
+    const collection = JSON.parse(localStorage.getItem(userCollectionKey)) || [];
     
     if (collection.length === 0) {
         collectionContainer.innerHTML = "<p>Ваша коллекция пока пуста.</p>";
@@ -138,11 +157,16 @@ function setupAddItemForm() {
     };
 }
 
-// Сохранение предмета в localStorage
+// Сохранение предмета
 function saveItem(item, statusElement) {
-    const collection = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    collection.unshift(item); // Добавляем в начало массива
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(collection));
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const userCollectionKey = USER_COLLECTION_PREFIX + user.userId;
+    const collection = JSON.parse(localStorage.getItem(userCollectionKey)) || [];
+    
+    collection.unshift(item);
+    localStorage.setItem(userCollectionKey, JSON.stringify(collection));
 
     statusElement.innerText = "✅ Предмет успешно добавлен!";
     setTimeout(() => window.location.href = "dashboard.html", 1500);
