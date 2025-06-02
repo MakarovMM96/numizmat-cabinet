@@ -6,14 +6,31 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h2>Добавить монету или значок</h2>
+    <div class="container">
+        <h2>Добавить монету или значок</h2>
+        <a href="dashboard.html" style="display: block; margin-bottom: 20px;">← Назад к коллекции</a>
 
-    <input type="text" id="name" placeholder="Название"><br>
-    <textarea id="description" placeholder="Описание"></textarea><br>
-    <input type="file" id="image"><br>
-    <img id="preview" alt="Превью" style="max-width: 150px; margin-top: 10px;"><br>
-    <button id="addItemBtn">Сохранить</button>
-    <p id="addStatus"></p>
+        <div class="form-group">
+            <label for="name">Название:</label>
+            <input type="text" id="name" placeholder="Например: 1 рубль 1997 года">
+        </div>
+
+        <div class="form-group">
+            <label for="description">Описание:</label>
+            <textarea id="description" placeholder="Дополнительная информация о предмете"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="image">Изображение:</label>
+            <input type="file" id="image" accept="image/*">
+            <div id="imagePreviewContainer" style="margin-top: 10px;">
+                <img id="preview" alt="Превью" style="max-width: 200px; display: none;">
+            </div>
+        </div>
+
+        <button id="addItemBtn" class="btn-primary">Сохранить предмет</button>
+        <p id="addStatus" class="status-message"></p>
+    </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script> 
