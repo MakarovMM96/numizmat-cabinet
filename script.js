@@ -1,6 +1,11 @@
 // Локальное хранилище коллекции
 const USER_COLLECTION_PREFIX = 'user_collection_';
 
+// Переменные для работы с модальным окном
+let currentEditItemId = null;
+const modal = document.getElementById("editModal");
+const closeBtn = document.querySelector(".close");
+
 // Регистрация пользователя
 function register() {
     const email = document.getElementById("email").value;
@@ -11,7 +16,6 @@ function register() {
         return;
     }
 
-    // Генерируем уникальный ID пользователя
     const userId = generateUserId(email);
     localStorage.setItem('currentUser', JSON.stringify({ 
         email, 
@@ -75,7 +79,6 @@ function loadCollection() {
 
     collectionContainer.innerHTML = "<p>Загрузка коллекции...</p>";
 
-    // Получаем коллекцию только для текущего пользователя
     const userCollectionKey = USER_COLLECTION_PREFIX + user.userId;
     const collection = JSON.parse(localStorage.getItem(userCollectionKey)) || [];
     
@@ -93,9 +96,116 @@ function loadCollection() {
             ${item.description ? `<p>${item.description}</p>` : ''}
             ${item.imageUrl ? `<img src="${item.imageUrl}" alt="Фото предмета" class="item-image">` : ''}
             <div class="item-date">${new Date(item.addedAt).toLocaleString()}</div>
+            <div class="item-actions">
+                <button onclick="openEditModal('${item.id}')" class="btn-edit">✏️ Редактировать</button>
+                <button onclick="deleteItem('${item.id}')" class="btn-delete">🗑️ Удалить</button>
+            </div>
         `;
         collectionContainer.appendChild(card);
     });
+}
+
+// Открытие модального окна для редактирования
+function openEditModal(itemId) {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const userCollectionKey = USER_COLLECTION_PREFIX + user.userId;
+    const collection = JSON.parse(localStorage.getItem(userCollectionKey)) || [];
+    const item = collection.find(i => i.id == itemId);
+    
+    if (!item) return;
+
+    currentEditItemId = itemId;
+    document.getElementById("editName").value = item.name || "";
+    document.getElementById("editDescription").value = item.description || "";
+    
+    const preview = document.getElementById("editPreview");
+    if (item.imageUrl) {
+        preview.src = item.imageUrl;
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+
+    modal.style.display = "block";
+}
+
+// Закрытие модального окна
+closeBtn.onclick = function() {
+    modal.style.display = "none";
+}
+
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+
+// Сохранение изменений
+document.getElementById("saveEditBtn").onclick = function() {
+    const name = document.getElementById("editName").value.trim();
+    const description = document.getElementById("editDescription").value.trim();
+    const imageInput = document.getElementById("editImage");
+    const file = imageInput.files[0];
+    const status = document.getElementById("editStatus");
+
+    if (!name) {
+        status.innerText = "⚠️ Введите название предмета";
+        return;
+    }
+
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user || !currentEditItemId) return;
+
+    const userCollectionKey = USER_COLLECTION_PREFIX + user.userId;
+    const collection = JSON.parse(localStorage.getItem(userCollectionKey)) || [];
+    const itemIndex = collection.findIndex(i => i.id == currentEditItemId);
+    
+    if (itemIndex === -1) return;
+
+    status.innerText = "⏳ Сохранение изменений...";
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            collection[itemIndex].imageUrl = e.target.result;
+            finishEdit(collection, userCollectionKey, status);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        // Если новый файл не выбран, оставляем старое изображение
+        finishEdit(collection, userCollectionKey, status);
+    }
+
+    function finishEdit(collection, key, statusElement) {
+        collection[itemIndex].name = name;
+        collection[itemIndex].description = description;
+        collection[itemIndex].addedAt = new Date().toISOString();
+        
+        localStorage.setItem(key, JSON.stringify(collection));
+        statusElement.innerText = "✅ Изменения сохранены!";
+        
+        setTimeout(() => {
+            modal.style.display = "none";
+            loadCollection();
+        }, 1000);
+    }
+}
+
+// Удаление предмета
+function deleteItem(itemId) {
+    if (!confirm("Вы уверены, что хотите удалить этот предмет?")) return;
+
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const userCollectionKey = USER_COLLECTION_PREFIX + user.userId;
+    const collection = JSON.parse(localStorage.getItem(userCollectionKey)) || [];
+    const updatedCollection = collection.filter(item => item.id != itemId);
+    
+    localStorage.setItem(userCollectionKey, JSON.stringify(updatedCollection));
+    loadCollection();
 }
 
 // Добавление предмета
@@ -109,7 +219,6 @@ function setupAddItemForm() {
 
     if (!addButton) return;
 
-    // Предпросмотр изображения
     imageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -124,7 +233,6 @@ function setupAddItemForm() {
         }
     });
 
-    // Добавление предмета
     addButton.onclick = function() {
         const name = document.getElementById("name").value.trim();
         const description = document.getElementById("description").value.trim();

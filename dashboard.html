@@ -17,6 +17,20 @@
         </div>
     </div>
 
+    <!-- Модальное окно для редактирования -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Редактировать предмет</h2>
+            <input type="text" id="editName" placeholder="Название"><br>
+            <textarea id="editDescription" placeholder="Описание"></textarea><br>
+            <input type="file" id="editImage" accept="image/*"><br>
+            <img id="editPreview" alt="Превью" style="max-width: 150px; display: none;"><br>
+            <button id="saveEditBtn" class="btn-primary">Сохранить</button>
+            <p id="editStatus"></p>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
