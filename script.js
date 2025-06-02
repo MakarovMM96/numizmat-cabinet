@@ -1,100 +1,107 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("addItemForm");
-    const collection = document.getElementById("collection");
-    const preview = document.getElementById("preview");
+// Регистрация
+function register() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-    // Загрузка данных из localStorage
-    let items = JSON.parse(localStorage.getItem("numizmatItems")) || [];
-
-    if (window.location.pathname.endsWith("dashboard.html")) {
-        renderCollection();
-    }
-
-    if (form) {
-        form.addEventListener("submit", function (e) {
-            e.preventDefault();
-
-            const name = document.getElementById("name").value.trim();
-            const description = document.getElementById("description").value.trim();
-            const imageInput = document.getElementById("image");
-            const file = imageInput.files[0];
-
-            if (!name) {
-                alert("Введите название предмета");
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                const newItem = {
-                    name,
-                    description,
-                    image: event.target.result
-                };
-
-                items.push(newItem);
-                localStorage.setItem("numizmatItems", JSON.stringify(items));
-
-                alert("Предмет успешно добавлен!");
-                window.location.href = "dashboard.html";
-            };
-
-            if (file) {
-                reader.readAsDataURL(file);
-            } else {
-                const newItem = {
-                    name,
-                    description,
-                    image: null
-                };
-
-                items.push(newItem);
-                localStorage.setItem("numizmatItems", JSON.stringify(items));
-
-                alert("Предмет добавлен без изображения");
-                window.location.href = "dashboard.html";
-            }
+    firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then(() => {
+            document.getElementById("status").innerText = "✅ Успешно зарегистрирован!";
+        })
+        .catch((error) => {
+            document.getElementById("status").innerText = "❌ Ошибка: " + error.message;
         });
+}
 
-        imageInput.addEventListener("change", function () {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    preview.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
+// Вход
+function login() {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+
+    firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(() => {
+            document.getElementById("loginStatus").innerText = "✅ Вход выполнен!";
+            window.location.href = "dashboard.html";
+        })
+        .catch((error) => {
+            document.getElementById("loginStatus").innerText = "❌ Ошибка: " + error.message;
+        });
+}
+
+// Выход
+function logout() {
+    firebase.auth().signOut();
+    window.location.href = "index.html";
+}
+
+// Защита страниц
+firebase.auth().onAuthStateChanged(user => {
+    if (!user && window.location.pathname !== "/index.html") {
+        window.location.href = "index.html";
+    }
+});
+
+// Показывает коллекцию
+window.onload = () => {
+    if (window.location.pathname === "/dashboard.html") {
+        const collection = document.getElementById("collection");
+        collection.innerHTML = "";
+
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                firebase.firestore().collection("items").where("userId", "==", user.uid).get()
+                    .then(snapshot => {
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            const card = document.createElement("div");
+                            card.className = "item-card";
+                            card.innerHTML = `
+                                <h3>${data.name}</h3>
+                                <p>${data.description}</p>
+                                ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Фото" width="100">` : ""}
+                            `;
+                            collection.appendChild(card);
+                        });
+                    });
             }
         });
     }
+};
 
-    function renderCollection() {
-        if (items.length === 0) {
-            collection.innerHTML = "<p>Ваша коллекция пока пуста.</p>";
+// Добавление предмета
+function addItem() {
+    const name = document.getElementById("name").value.trim();
+    const description = document.getElementById("description").value.trim();
+    const imageInput = document.getElementById("image");
+    const file = imageInput.files[0];
+
+    firebase.auth().onAuthStateChanged(user => {
+        if (!user) return;
+
+        if (!name) {
+            alert("Введите название предмета");
             return;
         }
 
-        items.forEach(item => {
-            const card = document.createElement("div");
-            card.className = "item-card";
+        const storageRef = firebase.storage().ref();
+        const imageRef = storageRef.child(`images/${Date.now()}_${file.name}`);
 
-            const h3 = document.createElement("h3");
-            h3.textContent = item.name;
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            imageRef.putString(event.target.result, 'data_url').then(snapshot => {
+                snapshot.ref.getDownloadURL().then(url => {
+                    firebase.firestore().collection("items").add({
+                        userId: user.uid,
+                        name,
+                        description,
+                        imageUrl: url
+                    }).then(() => {
+                        document.getElementById("addStatus").innerText = "✅ Предмет добавлен!";
+                        setTimeout(() => window.location.href = "dashboard.html", 1000);
+                    });
+                });
+            });
+        };
 
-            const p = document.createElement("p");
-            p.textContent = item.description;
-
-            if (item.image) {
-                const img = document.createElement("img");
-                img.src = item.image;
-                img.alt = "Фото";
-                img.width = 100;
-                card.appendChild(img);
-            }
-
-            card.appendChild(h3);
-            card.appendChild(p);
-            collection.appendChild(card);
-        });
-    }
-});
+        if (file) reader.readAsDataURL(file);
+    });
+}
