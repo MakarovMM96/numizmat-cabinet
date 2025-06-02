@@ -6,14 +6,17 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Моя коллекция монет и значков</h1>
-    <div class="collection" id="collection"></div>
-    <p><a href="add_item.html">Добавить предмет</a> | <a href="#" onclick="logout()">Выход</a></p>
+    <div class="container">
+        <h1>Моя коллекция монет и значков</h1>
+        <div class="collection" id="collection"></div>
+        <p><a href="add_item.html" class="btn-primary">Добавить предмет</a> | <a href="#" onclick="logout()" class="btn-secondary">Выход</a></p>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script> 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script> 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script> 
-    <script src="firebase.js"></script>
+        <div class="info-footer">
+            <p>Мы стараемся сделать продукт лучше. Свои пожелания Вы можете направить на почту <a href="mailto:karandug@yandex.ru">karandug@yandex.ru</a></p>
+            <p>Поддержать нас можно отправив средства на разработку мобильного приложения на номер карты <strong>2204 3101 1305 8807</strong></p>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

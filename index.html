@@ -6,24 +6,31 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Личный кабинет нумизмата</h1>
+    <div class="container">
+        <h1>Личный кабинет нумизмата</h1>
 
-    <h2>Регистрация</h2>
-    <input type="email" id="email" placeholder="Email"><br>
-    <input type="password" id="password" placeholder="Пароль"><br>
-    <button onclick="register()">Зарегистрироваться</button>
-    <p id="status"></p>
+        <div class="auth-section">
+            <h2>Регистрация</h2>
+            <input type="email" id="email" placeholder="Email"><br>
+            <input type="password" id="password" placeholder="Пароль"><br>
+            <button onclick="register()">Зарегистрироваться</button>
+            <p id="status"></p>
+        </div>
 
-    <h2>Вход</h2>
-    <input type="email" id="loginEmail" placeholder="Email"><br>
-    <input type="password" id="loginPassword" placeholder="Пароль"><br>
-    <button onclick="login()">Войти</button>
-    <p id="loginStatus"></p>
+        <div class="auth-section">
+            <h2>Вход</h2>
+            <input type="email" id="loginEmail" placeholder="Email"><br>
+            <input type="password" id="loginPassword" placeholder="Пароль"><br>
+            <button onclick="login()">Войти</button>
+            <p id="loginStatus"></p>
+        </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script> 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script> 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script> 
-    <script src="firebase.js"></script>
+        <div class="info-footer">
+            <p>Мы стараемся сделать продукт лучше. Свои пожелания Вы можете направить на почту <a href="mailto:karandug@yandex.ru">karandug@yandex.ru</a></p>
+            <p>Поддержать нас можно отправив средства на разработку мобильного приложения на номер карты <strong>2204 3101 1305 8807</strong></p>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

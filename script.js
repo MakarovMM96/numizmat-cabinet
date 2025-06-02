@@ -1,16 +1,18 @@
-// Регистрация пользователя
+// Локальное хранилище коллекции
+const STORAGE_KEY = 'numizmat_collection';
+
+// Регистрация пользователя (упрощенная версия для локального хранения)
 function register() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
-    firebase.auth().createUserWithEmailAndPassword(email, password)
-        .then(() => {
-            document.getElementById("status").innerText = "✅ Успешно зарегистрирован!";
-        })
-        .catch((error) => {
-            console.error("Ошибка регистрации: ", error);
-            document.getElementById("status").innerText = "❌ Ошибка: " + error.message;
-        });
+    if (!email || !password) {
+        document.getElementById("status").innerText = "❌ Заполните все поля";
+        return;
+    }
+
+    localStorage.setItem('currentUser', JSON.stringify({ email }));
+    document.getElementById("status").innerText = "✅ Успешно зарегистрирован!";
 }
 
 // Вход пользователя
@@ -18,73 +20,77 @@ function login() {
     const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
 
-    firebase.auth().signInWithEmailAndPassword(email, password)
-        .then(() => {
-            document.getElementById("loginStatus").innerText = "✅ Вход выполнен!";
-            window.location.href = "dashboard.html";
-        })
-        .catch((error) => {
-            console.error("Ошибка входа: ", error);
-            document.getElementById("loginStatus").innerText = "❌ Ошибка: " + error.message;
-        });
+    if (!email || !password) {
+        document.getElementById("loginStatus").innerText = "❌ Заполните все поля";
+        return;
+    }
+
+    localStorage.setItem('currentUser', JSON.stringify({ email }));
+    document.getElementById("loginStatus").innerText = "✅ Вход выполнен!";
+    setTimeout(() => window.location.href = "dashboard.html", 500);
 }
 
 // Выход пользователя
 function logout() {
-    firebase.auth().signOut()
-        .then(() => {
-            window.location.href = "index.html";
-        })
-        .catch((error) => {
-            console.error("Ошибка выхода: ", error);
-        });
+    localStorage.removeItem('currentUser');
+    window.location.href = "index.html";
 }
 
-// Защита страниц (только для авторизованных)
-window.onload = () => {
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const storage = firebase.storage();
+// Проверка авторизации
+function checkAuth() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    const path = window.location.pathname.split('/').pop();
 
-    auth.onAuthStateChanged(user => {
-        const path = window.location.pathname;
+    if (!user && path !== 'index.html') {
+        window.location.href = "index.html";
+        return false;
+    }
 
-        // Если не главная и пользователь не авторизован — отправляем на вход
-        if (!user && !path.endsWith("index.html")) {
-            window.location.href = "index.html";
-            return;
-        }
+    return !!user;
+}
 
-        // На главной показываем форму
-        if (path.endsWith("index.html")) {
-            console.log("Главная загружена");
-        }
+// Загрузка коллекции
+function loadCollection() {
+    if (!checkAuth()) return;
 
-        // На странице dashboard подгружаем коллекцию
-        if (path.endsWith("dashboard.html") && user) {
-            loadCollection(db, user.uid);
-        }
+    const collectionContainer = document.getElementById("collection");
+    if (!collectionContainer) return;
 
-        // На странице add_item настраиваем форму
-        if (path.endsWith("add_item.html") && user) {
-            setupAddItemForm(db, storage, user);
-        }
+    collectionContainer.innerHTML = "<p>Загрузка коллекции...</p>";
+
+    const collection = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    
+    if (collection.length === 0) {
+        collectionContainer.innerHTML = "<p>Ваша коллекция пока пуста.</p>";
+        return;
+    }
+
+    collectionContainer.innerHTML = "";
+    collection.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "item-card";
+        card.innerHTML = `
+            <h3>${item.name || "Без названия"}</h3>
+            ${item.description ? `<p>${item.description}</p>` : ''}
+            ${item.imageUrl ? `<img src="${item.imageUrl}" alt="Фото предмета" class="item-image">` : ''}
+            <div class="item-date">${new Date(item.addedAt).toLocaleString()}</div>
+        `;
+        collectionContainer.appendChild(card);
     });
-};
+}
 
-// Настройка формы добавления предмета
-function setupAddItemForm(db, storage, user) {
+// Добавление предмета
+function setupAddItemForm() {
+    if (!checkAuth()) return;
+
     const imageInput = document.getElementById("image");
     const preview = document.getElementById("preview");
     const addButton = document.getElementById("addItemBtn");
     const status = document.getElementById("addStatus");
 
-    if (!addButton) {
-        console.error("Кнопка добавления не найдена");
-        return;
-    }
+    if (!addButton) return;
 
-    // Обработчик для предпросмотра изображения
+    // Предпросмотр изображения
     imageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -99,104 +105,56 @@ function setupAddItemForm(db, storage, user) {
         }
     });
 
-    // Обработчик кнопки добавления
-    addButton.onclick = async () => {
+    // Добавление предмета
+    addButton.onclick = function() {
         const name = document.getElementById("name").value.trim();
         const description = document.getElementById("description").value.trim();
         const file = imageInput.files[0];
 
         if (!name) {
             status.innerText = "⚠️ Введите название предмета";
-            status.style.color = "#e67e22";
             return;
         }
 
         status.innerText = "⏳ Сохранение предмета...";
-        status.style.color = "#3498db";
 
-        try {
-            let imageUrl = null;
-            
-            // Если есть файл - загружаем его в Storage
-            if (file) {
-                const storageRef = storage.ref();
-                const fileRef = storageRef.child(`users/${user.uid}/items/${Date.now()}_${file.name}`);
-                await fileRef.put(file);
-                imageUrl = await fileRef.getDownloadURL();
-            }
+        const newItem = {
+            id: Date.now(),
+            name,
+            description,
+            addedAt: new Date().toISOString()
+        };
 
-            // Сохраняем данные в Firestore
-            await db.collection("items").add({
-                userId: user.uid,
-                name: name,
-                description: description,
-                imageUrl: imageUrl || "",
-                addedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            status.innerText = "✅ Предмет успешно добавлен!";
-            status.style.color = "#2ecc71";
-            
-            // Через 1.5 сек переходим на страницу коллекции
-            setTimeout(() => {
-                window.location.href = "dashboard.html";
-            }, 1500);
-            
-        } catch (error) {
-            console.error("Ошибка при добавлении предмета:", error);
-            status.innerText = "❌ Ошибка: " + error.message;
-            status.style.color = "#e74c3c";
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                newItem.imageUrl = e.target.result;
+                saveItem(newItem, status);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            saveItem(newItem, status);
         }
     };
 }
 
-// Функция загрузки коллекции
-function loadCollection(db, userId) {
-    const collectionContainer = document.getElementById("collection");
-    if (!collectionContainer) return;
+// Сохранение предмета в localStorage
+function saveItem(item, statusElement) {
+    const collection = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    collection.unshift(item); // Добавляем в начало массива
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(collection));
 
-    collectionContainer.innerHTML = "<p>Загрузка коллекции...</p>";
-
-    db.collection("items")
-        .where("userId", "==", userId)
-        .orderBy("addedAt", "desc")
-        .get()
-        .then(snapshot => {
-            collectionContainer.innerHTML = "";
-
-            if (snapshot.empty) {
-                collectionContainer.innerHTML = "<p>Ваша коллекция пока пуста.</p>";
-                return;
-            }
-
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const card = document.createElement("div");
-                card.className = "item-card";
-
-                card.innerHTML = `
-                    <h3>${data.name || "Без названия"}</h3>
-                    ${data.description ? `<p>${data.description}</p>` : ''}
-                    ${data.imageUrl ? `<img src="${data.imageUrl}" alt="Фото предмета" class="item-image">` : ''}
-                    <div class="item-date">${formatDate(data.addedAt?.toDate())}</div>
-                `;
-                collectionContainer.appendChild(card);
-            });
-        })
-        .catch(error => {
-            console.error("Ошибка загрузки коллекции: ", error);
-            collectionContainer.innerHTML = `<p class="error">Ошибка загрузки данных: ${error.message}</p>`;
-        });
+    statusElement.innerText = "✅ Предмет успешно добавлен!";
+    setTimeout(() => window.location.href = "dashboard.html", 1500);
 }
 
-// Форматирование даты
-function formatDate(date) {
-    if (!date) return "";
-    return date.toLocaleDateString("ru-RU", {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
+// Инициализация страницы
+window.onload = function() {
+    const path = window.location.pathname.split('/').pop();
+
+    if (path === 'dashboard.html') {
+        loadCollection();
+    } else if (path === 'add_item.html') {
+        setupAddItemForm();
+    }
+};

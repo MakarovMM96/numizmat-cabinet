@@ -8,7 +8,7 @@
 <body>
     <div class="container">
         <h2>Добавить монету или значок</h2>
-        <a href="dashboard.html" style="display: block; margin-bottom: 20px;">← Назад к коллекции</a>
+        <a href="dashboard.html" class="back-link">← Назад к коллекции</a>
 
         <div class="form-group">
             <label for="name">Название:</label>
@@ -23,24 +23,20 @@
         <div class="form-group">
             <label for="image">Изображение:</label>
             <input type="file" id="image" accept="image/*">
-            <div id="imagePreviewContainer" style="margin-top: 10px;">
-                <img id="preview" alt="Превью" style="max-width: 200px; display: none;">
+            <div id="imagePreviewContainer">
+                <img id="preview" alt="Превью">
             </div>
         </div>
 
         <button id="addItemBtn" class="btn-primary">Сохранить предмет</button>
         <p id="addStatus" class="status-message"></p>
+
+        <div class="info-footer">
+            <p>Мы стараемся сделать продукт лучше. Свои пожелания Вы можете направить на почту <a href="mailto:karandug@yandex.ru">karandug@yandex.ru</a></p>
+            <p>Поддержать нас можно отправив средства на разработку мобильного приложения на номер карты <strong>2204 3101 1305 8807</strong></p>
+        </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script> 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script> 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script> 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script> 
-
-    <!-- Настройки Firebase -->
-    <script src="firebase.js"></script>
-    <!-- Основной скрипт -->
     <script src="script.js"></script>
 </body>
 </html>
