@@ -8,7 +8,15 @@
 <body>
     <div class="container">
         <h1>Моя коллекция монет и значков</h1>
+        
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="Поиск по названию, описанию или тегам...">
+            <button id="searchBtn" class="btn-primary">Найти</button>
+            <button id="resetSearchBtn" class="btn-secondary">Сбросить</button>
+        </div>
+        
         <div class="collection" id="collection"></div>
+        
         <p><a href="add_item.html" class="btn-primary">Добавить предмет</a> | <a href="#" onclick="logout()" class="btn-secondary">Выход</a></p>
 
         <div class="info-footer">
@@ -24,6 +32,10 @@
             <h2>Редактировать предмет</h2>
             <input type="text" id="editName" placeholder="Название"><br>
             <textarea id="editDescription" placeholder="Описание"></textarea><br>
+            <div class="form-group">
+                <label for="editTags">Теги (через запятую):</label>
+                <input type="text" id="editTags" placeholder="Например: монета, Россия, 1997">
+            </div>
             <input type="file" id="editImage" accept="image/*"><br>
             <img id="editPreview" alt="Превью" style="max-width: 150px; display: none;"><br>
             <button id="saveEditBtn" class="btn-primary">Сохранить</button>
